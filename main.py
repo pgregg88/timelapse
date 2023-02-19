@@ -20,7 +20,7 @@ def start_task(task_func, task_name):
 
 # define main function
 def main():
-    photo_count = 300
+    photo_count = 11
     delay_sec = 3
     photo_path = "/media/photos/2/daily_photos"
 
@@ -61,4 +61,5 @@ def main():
             raise ValueError(f'Error in publish_video task: {e}')
 
 # run main function
-main()
+if __name__ == '__main__':
+    main()
