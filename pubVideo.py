@@ -7,7 +7,7 @@ test_mode = False
 log_level = logging.DEBUG
 
 #setup logging
-logging.basicConfig(level=log_level, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'),logging.StreamHandler()])
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
 
 
 

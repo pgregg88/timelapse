@@ -8,11 +8,9 @@ import csv
 csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'
 
-write_srt_count = 55
-
 
 # setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
 
 # retry decorator with maximum number of retries
 def retry_on_exception(max_retries):
@@ -73,15 +71,15 @@ def take_photos(num_photos, delay_sec, photo_path):
         remaining_photos = num_photos - (i + 1)
         remaining_time = timedelta(seconds=remaining_photos*delay_sec)
         completion_time = datetime.now() + remaining_time
-        if image_count % 10 == 0:
+        if image_count % 100 == 0: # set to 500? for prod
             logging.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
-        if image_count % 50 == 0: #every 1 minutes
+        if image_count % 50 == 0: #set to 50 for prod.
             try:
                 os.system(f'scp {csv_copy_path} {csv_save_path}')
                 logging.info(f'WX CSV copied from {csv_copy_path}')
             except Exception as e:
                 logging.error(str(e))
-        if image_count % 5 == 0: # set to 55 for prod if 60 fps per second
+        if image_count % 55 == 0: # set to 55 for prod if 60 fps per second
             #get latest wx
             line_num = -1
             with open('/media/videos/laketraviswx.csv', "r", encoding="utf-8", errors="ignore") as csv_file:
