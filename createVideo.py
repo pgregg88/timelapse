@@ -1,0 +1,48 @@
+import datetime
+import logging
+import random
+import os
+import shutil
+
+test_mode = False
+log_level = logging.DEBUG
+
+# Setup logging
+logging.basicConfig(level=log_level, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'),logging.StreamHandler()])
+
+def create_video(photo_path, srt_path):
+    audio_track_list = ['tomorrow-llthat.m4a', 'brazilsamb-funkyelement.m4a']
+    audio_file_name = random.choice(audio_track_list)
+    fps = 60 # frames per second
+    now = datetime.datetime.now()
+    current_date = now.strftime("%Y-%m-%d")
+    video_name = f"laketravis_{current_date}.mp4"
+    video_path = f'/media/videos/daily_upload/{video_name}'
+    json_path = f'/home/pgregg/timelapse/json/{video_name}.json'
+
+    # Create video
+    logging.info('Starting video creation')
+    try:
+        cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -shortest -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75'" -y {video_path}'''
+        logging.info('Executing command: ' + cmd)
+        os.system(cmd)
+
+        if os.path.exists(video_path):
+            logging.info(f'Video created successfully: {video_path}')
+            logging.info(f'Creating JSON file for upload')
+            json_path = '/home/pgregg/timelapse/json/2023-02-16.json' 
+            logging.info(f'JSON file created: {json_path}')
+            return video_path, json_path
+        else:
+            logging.error('Error creating video')
+            return None, None
+
+        logging.info('Video complete.')
+    except Exception as e:
+        logging.error('Unknown error creating video', exc_info=e)
+        return None, None
+
+if test_mode == True:
+    photo_path = '/media/photos/test99'
+    srt_path = '/media/videos/srt/02142023_b.srt'
+    create_video(photo_path, srt_path)

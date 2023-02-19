@@ -1,0 +1,64 @@
+import logging
+import concurrent.futures
+import os
+from takePhotos import take_photos
+from createVideo import create_video
+from pubVideo import publish_video
+
+#vars
+log_level = logging.DEBUG
+
+#setup logging
+logging.basicConfig(level=log_level, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'),logging.StreamHandler()])
+
+# define function for starting a task
+def start_task(task_func, task_name):
+    logging.info(f'Starting task {task_name}')
+    task_func()
+    logging.info(f'Finished task {task_name}')
+
+# define main function
+        
+def main():
+    num_photos = 300
+    delay_sec = 3
+    photo_path = "/media/photos/2/daily_photos"
+
+    if not os.path.exists(photo_path):
+        os.makedirs(photo_path)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # submit take_pictures task to the thread pool and get its future object
+        tp_future = executor.submit(take_photos, num_photos, delay_sec, photo_path)
+
+        # wait for the take_pictures future to complete
+        photo_path, srt_path = tp_future.result()
+        if photo_path is None:
+            # handle the error, for example:
+            logging.error('Error no photo_path received from take_pictures()')
+        if srt_path is None:
+            logging.error('Error no srt_path received from take_pictures()')
+        logging.debug(f'take_pictures: Received photo_path: {photo_path}, srt_path: {srt_path}')
+
+        # submit create_video task to the thread pool and get its future object
+        cv_future = executor.submit(create_video, photo_path, srt_path)
+
+        # wait for the create_video future to complete
+        video_path, json_path = cv_future.result()
+        if video_path is None:
+            # handle the error, for example:
+            logging.error('Error creating video')
+        if json_path is None:
+            logging.error('Error creating JSON')
+        logging.debug(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
+
+        # submit publish_video task to the thread pool and get its future object
+        pv_future = executor.submit(publish_video, video_path, json_path)
+
+        # wait for the publish_video future to complete
+        pv_future.result()
+
+        
+
+# run main function
+main()
