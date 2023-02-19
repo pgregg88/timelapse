@@ -1,66 +1,64 @@
-import logging
 import os
-from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+import logging
+import concurrent.futures
 from takePhotos import take_photos
 from createVideo import create_video
 from pubVideo import publish_video
 
-# Constants
-LOG_LEVEL = logging.DEBUG
-LOG_FILE = '/home/pgregg/timelapse/tl.log'
-PHOTO_COUNT = 30
-DELAY_SEC = 3
-PHOTO_PATH = '/media/photos/2/daily_photos'
+# setup logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
 
-# Set up logging
-logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s [%(levelname)s] %(message)s',
-                    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
-
-def main():
+# define function for starting a task
+def start_task(task_func, task_name):
+    logging.info(f'Starting task {task_name}')
     try:
-        # Create photo directory if it doesn't exist
-        if not os.path.exists(PHOTO_PATH):
-            os.makedirs(PHOTO_PATH)
-
-        # Estimate end time of photo taking
-        start_time = datetime.now()
-        end_time = start_time + timedelta(seconds=PHOTO_COUNT * DELAY_SEC)
-        logging.info(f"Photo taking started. Estimated end time: {end_time}")
-
-        # Take photos
-        with ThreadPoolExecutor() as executor:
-            tp_future = executor.submit(take_photos, PHOTO_COUNT, DELAY_SEC, PHOTO_PATH)
-
-        # Wait for photo taking to complete
-        photo_path, srt_path = tp_future.result()
-        if photo_path is None:
-            raise ValueError('Error: no photo path received from take_photos')
-        if srt_path is None:
-            raise ValueError('Error: no srt path received from take_photos')
-        logging.info(f"Photo taking complete. Photos saved to {photo_path}")
-
-        # Create video
-        with ThreadPoolExecutor() as executor:
-            cv_future = executor.submit(create_video, photo_path, srt_path)
-
-        # Wait for video creation to complete
-        video_path, json_path = cv_future.result()
-        if video_path is None:
-            raise ValueError('Error: unable to create video')
-        if json_path is None:
-            raise ValueError('Error: unable to create JSON file')
-        logging.info(f"Video creation complete. Video saved to {video_path}, JSON file saved to {json_path}")
-
-        # Publish video
-        with ThreadPoolExecutor() as executor:
-            pv_future = executor.submit(publish_video, video_path, json_path)
-
-        # Wait for video publishing to complete
-        pv_future.result()
-        logging.info("Video publishing complete")
+        task_func()
+        logging.info(f'Finished task {task_name}')
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logging.error(f'Error in task {task_name}: {e}')
+        raise ValueError(f'Error in task {task_name}: {e}')
 
-if __name__ == '__main__':
-    main()
+# define main function
+def main():
+    photo_count = 300
+    delay_sec = 3
+    photo_path = "/media/photos/2/daily_photos"
+
+    if not os.path.exists(photo_path):
+        os.makedirs(photo_path)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # submit take_pictures task to the thread pool and get its future object
+        tp_future = executor.submit(take_photos, photo_count, delay_sec, photo_path)
+
+        # wait for the take_pictures future to complete
+        try:
+            photo_path, srt_path = tp_future.result()
+            logging.debug(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
+        except Exception as e:
+            logging.error(f'Error receiving result from take_photos: {e}')
+            raise ValueError(f'Error receiving result from take_photos: {e}')
+
+        # submit create_video task to the thread pool and get its future object
+        cv_future = executor.submit(create_video, photo_path, srt_path)
+
+        # wait for the create_video future to complete
+        try:
+            video_path, json_path = cv_future.result()
+            logging.debug(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
+        except Exception as e:
+            logging.error(f'Error receiving result from create_video: {e}')
+            raise ValueError(f'Error receiving result from create_video: {e}')
+
+        # submit publish_video task to the thread pool
+        pv_future = executor.submit(publish_video, video_path, json_path)
+
+        # wait for the publish_video future to complete
+        try:
+            pv_future.result()
+        except Exception as e:
+            logging.error(f'Error in publish_video task: {e}')
+            raise ValueError(f'Error in publish_video task: {e}')
+
+# run main function
+main()
