@@ -35,6 +35,14 @@ def take_photos(num_photos, delay_sec, photo_path):
                 f.write(response.content)
         except Exception as e:
             logging.error(str(e))
+        if (i+1) % 10 == 0 or i == num_photos - 1:
+            photos_taken = i+1
+            remaining_photos = num_photos - photos_taken
+            time_elapsed = datetime.now() - start_time
+            time_per_photo = time_elapsed / photos_taken
+            time_remaining = remaining_photos * time_per_photo
+            eta = datetime.now() + time_remaining
+            logging.info(f"Photos taken: {photos_taken}, Remaining: {remaining_photos}, ETA: {eta}")
         time.sleep(delay_sec)
     end_time = datetime.now()
     duration = end_time - start_time
