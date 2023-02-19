@@ -4,6 +4,7 @@ import concurrent.futures
 from takePhotos import take_photos
 from createVideo import create_video
 from pubVideo import publish_video
+from datetime import datetime
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
@@ -20,9 +21,12 @@ def start_task(task_func, task_name):
 
 # define main function
 def main():
-    photo_count = 11
+    current_time = datetime.now()
+    dir_name = current_time.strftime("%Y-%m-%d_%H%M%S")
+
+    photo_count = 60
     delay_sec = 3
-    photo_path = "/media/photos/2/daily_photos"
+    photo_path = f"/media/photos/2/{dir_name}"
 
     if not os.path.exists(photo_path):
         os.makedirs(photo_path)

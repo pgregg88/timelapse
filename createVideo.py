@@ -15,7 +15,7 @@ def create_video(photo_path, srt_path):
     audio_file_name = random.choice(audio_track_list)
     fps = 60 # frames per second
     now = datetime.datetime.now()
-    current_date = now.strftime("%Y-%m-%d")
+    current_date = now.strftime("%Y-%m-%d_%H%M%S")
     video_name = f"laketravis_{current_date}.mp4"
     video_path = f'/media/videos/daily_upload/{video_name}'
     json_path = f'/home/pgregg/timelapse/json/{video_name}.json'
