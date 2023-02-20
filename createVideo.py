@@ -4,12 +4,10 @@ import random
 import os
 import shutil
 import json
+from main import logger
 
 test_mode = False
-log_level = logging.DEBUG
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
 
 def create_video(photo_path, srt_path):
     audio_track_list = ['tomorrow-llthat.m4a', 'brazilsamb-funkyelement.m4a', 'brazilsamb-happyrock.m4a',  'creativeminds-straight.m4a', 'dance-hipjazz.m4a', 'dance-littleplanet.m4a', 'deepblue-hipjazz.m4a', 'deepblue-sweet.m4a', 'downtown-dreams.m4a', 'downtown-hipjazz.m4a', 'dreams-happyrock.m4a', 'dreams-onceagain.m4a', 'elevate-hipjazz.m4a', 'elevate-newdawn.m4a', 'emories-brazilsamb.m4a', 'emories-house.m4a', 'funkyelement-creativeminds.m4a', 'funkyelement-groovyhiphop.m4a', 'groovyhiphop-dance.m4a', 'groovyhiphop-downtown.m4a', 'happyrock-downtown.m4a', 'happyrock-groovyhiphop.m4a', 'hipjazz-happyrock.m4a', 'hipjazz-photoalbu.m4a', 'house-happyrock.m4a', 'house-hipjazz.m4a', 'house-inspire.m4a', 'house-littleplanet.m4a', 'house-pianomoment.m4a', 'inspire-groovyhiphop.m4a', 'inspire-hipjazz.m4a', 'littleplanet-deepblue.m4a', 'littleplanet-hipjazz.m4a', 'littleplanet-photoalbu.m4a', 'llthat-emories.m4a', 'llthat-house.m4a', 'newdawn-dance.m4a', 'newdawn-house.m4a', 'onceagain-dance.m4a', 'onceagain-newdawn.m4a', 'photoalbu-dance.m4a', 'photoalbu-groovyhiphop.m4a', 'pianomoment-dance.m4a',  'psychedelic-downtown.m4a', 'psychedelic-tomorrow.m4a', 'straight-groovyhiphop.m4a', 'straight-happyrock.m4a', 'summer-funkyelement.m4a', 'summer-sweet.m4a', 'sweet-onceagain.m4a', 'sweet-sweet.m4a', 'tomorrow-downtown.m4a']
@@ -23,7 +21,7 @@ def create_video(photo_path, srt_path):
 
     #create json
     try:
-        logging.info(f'Creating JSON file for upload')
+        logger.info(f'Creating JSON file for upload')
         recordingdate = now.strftime("%Y-%m-%d")
         titledate = now.strftime("%m/%d/%Y")
         title = f'{titledate}: Lake Travis, Texas (Austin, TX): 4K, 60fps Daily Weather & Boat Traffic Timelapse Video'
@@ -52,21 +50,21 @@ def create_video(photo_path, srt_path):
 
         with open(json_path, "w") as outfile:
             json.dump( youTubeMetaData, outfile)
-            logging.info('YouTube Metadata file created')
-            logging.info(f'JSON file created: {json_path}')
+            logger.info('YouTube Metadata file created')
+            logger.info(f'JSON file created: {json_path}')
         
     except Exception as e:
-            logging.error('Error creating JSON', exc_info=e)   
+            logger.error('Error creating JSON', exc_info=e)   
 
     # Create video
-    logging.info('Starting video creation')
+    logger.info('Starting video creation')
     try:
         cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -shortest -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75'" -y {video_path}'''
-        logging.info(f'Executing command: {cmd}')
+        logger.info(f'Executing command: {cmd}')
         os.system(cmd)
 
         if os.path.exists(video_path):
-            logging.info(f'Video created successfully: {video_path}')
+            logger.info(f'Video created successfully: {video_path}')
 
             #archive pictures
             try:
@@ -74,28 +72,28 @@ def create_video(photo_path, srt_path):
                 isExist = os.path.exists(archive_dir_path)
                 if not isExist:
                     os.makedirs(archive_dir_path)
-                    logging.info('Archive path directory created')
+                    logger.info('Archive path directory created')
                 try:
                     archive_path = f'{archive_dir_path}/{current_date}.tar.gz'
                     os.system(f"tar --directory {photo_path} --create --verbose --file {archive_path} .")
-                    logging.info(f'Image archive created: {archive_path}' )
+                    logger.info(f'Image archive created: {archive_path}' )
                 except Exception as e:
-                    logging.error('Error at %s', 'division', exc_info=e)
+                    logger.error('Error at %s', 'division', exc_info=e)
                 if os.path.exists(archive_path):
                     shutil.rmtree(photo_path)
-                    logging.info(f'Local copy of photos deleted: {photo_path}' )
+                    logger.info(f'Local copy of photos deleted: {photo_path}' )
                 else:
-                    logging.error(f'Error: Could not delete local copy of photos: {photo_path}', exc_info=e)
+                    logger.error(f'Error: Could not delete local copy of photos: {photo_path}', exc_info=e)
                     
             except Exception as e:
-                logging.error('Error creating photo archive', exc_info=e)
+                logger.error('Error creating photo archive', exc_info=e)
             return video_path, json_path
         else:
-            logging.error('Error creating video')
+            logger.error('Error creating video')
             return None, None
-        logging.info('Video complete.')
+        logger.info('Video complete.')
     except Exception as e:
-        logging.error('Unknown error creating video', exc_info=e)
+        logger.error('Unknown error creating video', exc_info=e)
         return None, None
 
 if test_mode == True:
