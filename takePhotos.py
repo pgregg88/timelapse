@@ -7,8 +7,6 @@ import csv
 
 csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'
-
-
 # setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', handlers=[logging.FileHandler('/home/pgregg/timelapse/tl.log'), logging.StreamHandler()])
 
@@ -75,7 +73,8 @@ def take_photos(num_photos, delay_sec, photo_path):
             logging.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 50 == 0: #set to 50 for prod.
             try:
-                os.system(f'scp {csv_copy_path} {csv_save_path}')
+                scp_command = ['scp', csv_copy_path, csv_save_path]
+                os.system(' '.join(scp_command))
                 logging.info(f'WX CSV copied from {csv_copy_path}')
             except Exception as e:
                 logging.error(str(e))
