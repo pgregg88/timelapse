@@ -31,8 +31,7 @@ def main():
 
     run_hours = 7
     #photo_count = run_hours * 1200 #1200 per hour
-    #photo_count = 16400
-    photo_count = 16
+    photo_count = 16400
     delay_sec = 3
     photo_path = f"/media/photos/2/{dir_name}"
 
@@ -41,7 +40,7 @@ def main():
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # submit take_pictures task to the thread pool and get its future object
-        tp_future = executor.submit(take_photos, photo_count, delay_sec, photo_path)
+        tp_future = executor.submit(take_photos, photo_count, delay_sec, photo_path, logger)
 
         # wait for the take_pictures future to complete
         try:
@@ -52,7 +51,7 @@ def main():
             raise ValueError(f'Error receiving result from take_photos: {e}')
 
         # submit create_video task to the thread pool and get its future object
-        cv_future = executor.submit(create_video, photo_path, srt_path)
+        cv_future = executor.submit(create_video, photo_path, srt_path, logger)
 
         # wait for the create_video future to complete
         try:
@@ -63,7 +62,7 @@ def main():
             raise ValueError(f'Error receiving result from create_video: {e}')
 
         # submit publish_video task to the thread pool
-        pv_future = executor.submit(publish_video, video_path, json_path)
+        pv_future = executor.submit(publish_video, video_path, json_path, logger)
 
         # wait for the publish_video future to complete
         try:
@@ -71,7 +70,8 @@ def main():
         except Exception as e:
             logger.error(f'Error in publish_video task: {e}')
             raise ValueError(f'Error in publish_video task: {e}')
-
+    # shutdown the executor after all tasks have completed
+    executor.shutdown()
 # run main function
 if __name__ == '__main__':
     main()

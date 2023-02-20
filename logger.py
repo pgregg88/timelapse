@@ -1,5 +1,4 @@
 import logging
-from logger import setup_logging
 
 def setup_logging(log_path):
     # Create a logger

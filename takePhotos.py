@@ -8,8 +8,8 @@ import csv
 from logger import setup_logging
 
 # Set up the logger with the log path
-log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
-logger = setup_logging(log_path)
+# log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
+# logger = setup_logging(log_path)
 
 csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'
@@ -23,16 +23,14 @@ def retry_on_exception(max_retries):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
-                    logger.warning(f'Retrying... ({tries + 1}/{max_retries})')
-                    logger.error(str(e))
-                    tries += 1
+                   tries += 1
             raise Exception(f'Maximum number of retries ({max_retries}) exceeded')
         return wrapper
     return decorator
 
 # decorate take_photo function with retry decorator
 @retry_on_exception(5)
-def take_photo(url, photo_path):
+def take_photo(url, photo_path, logger):
     response = requests.get(url)
     if response.status_code == 200:
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -43,12 +41,12 @@ def take_photo(url, photo_path):
     else:
         raise Exception(f"Error taking photo: {response.status_code}")
 
-def write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_dir, visability, daily_rain, srt_date, srt_row_count):
+def write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_dir, visability, daily_rain, srt_date, srt_row_count, logger):
     with open(srt_path, 'a') as f_srt:
         f_srt.writelines(f"{srt_row_count}\r\n0{srt_start_time},000 --> 0{srt_end_time},000\r\n{srt_date}  temp:{temperature}F  pres:{pressure}inHg  hum:{humidity}%  wind:{wind_speed}mph {wind_dir}\r\n\r\n")
     logger.info(f'SRT file updated {srt_path}')
     
-def take_photos(num_photos, delay_sec, photo_path):
+def take_photos(num_photos, delay_sec, photo_path, logger):
     dateraw= datetime.now()
     timestamp = dateraw.strftime("%Y-%m-%d_%H%M%S")
     # srt_path = '/media/videos/srt/02162023_b.srt'
@@ -67,14 +65,14 @@ def take_photos(num_photos, delay_sec, photo_path):
         srt_now = datetime.now()
         srt_date = srt_now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
         try:
-            take_photo(url, photo_path)
+            take_photo(url, photo_path, logger)
         except Exception as e:
             logger.error(str(e))
         image_count += 1
         remaining_photos = num_photos - (i + 1)
         remaining_time = timedelta(seconds=remaining_photos*delay_sec)
         completion_time = datetime.now() + remaining_time
-        if image_count % 1200 == 0: # 1200 = every hour
+        if image_count % 12 == 0: # 1200 = every hour
             logger.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 50 == 0: #set to 50 for prod.
             try:
@@ -102,7 +100,7 @@ def take_photos(num_photos, delay_sec, photo_path):
             srt_end_calc = srt_elapsed_seconds + 1
             srt_end_time = timedelta(seconds=srt_end_calc)
             
-            write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_dir, visability, daily_rain, srt_date, srt_row_count)
+            write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_dir, visability, daily_rain, srt_date, srt_row_count, logger)
             srt_elapsed_seconds += 1
             srt_row_count += 1
             
