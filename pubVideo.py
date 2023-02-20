@@ -2,8 +2,11 @@ import logging
 import subprocess
 import os
 import shutil
-from main import logger
+from main import log_path
+from logger import setup_logging
 
+# Set up the logger with the log path
+logger = setup_logging(log_path)
 
 def publish_video(video_path, json_path):
     logger.info('Publishing Video')

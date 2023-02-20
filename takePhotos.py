@@ -4,7 +4,12 @@ import logging
 import time
 from datetime import datetime, timedelta
 import csv
-from main import logger
+#from main import log_path
+from logger import setup_logging
+
+# Set up the logger with the log path
+log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
+logger = setup_logging(log_path)
 
 csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'

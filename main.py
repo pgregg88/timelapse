@@ -5,44 +5,14 @@ from takePhotos import take_photos
 from createVideo import create_video
 from pubVideo import publish_video
 from datetime import datetime
+from logger import setup_logging
 
-# Define a function that sets up a global logger with the given log file path
-def setup_logging(log_path):
-    # Create a logger
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-    # Create a file handler and set its log level to INFO
-    fh = logging.FileHandler(log_path)
-    fh.setLevel(logging.INFO)
-    
-    # Create a stream handler and set its log level to INFO
-    sh = logging.StreamHandler()
-    sh.setLevel(logging.INFO)
-
-    # Create a formatter and add it to the handler
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-    fh.setFormatter(formatter)
-    sh.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(fh)
-    logger.addHandler(sh)
-
-    return logger
-
-if __name__ == '__main__':
-    # Set up the logger with the log path
-    now = datetime.now()
-    log_date = now.strftime("%Y-%m-%d_%H%M%S")
-    project_name = 'lt_daily'
-    log_path = f'/home/pgregg/timelapse/logs/tl_{project_name}_{log_date}.log'
-    logger = setup_logging(log_path)
-
-    # Use the logger to log some messages
-    logger.info('Starting program')
-    logger.debug('This is a debug message')
-    logger.warning('This is a warning message')
+# Set up the logger with the log path
+now = datetime.now()
+log_date = now.strftime("%Y-%m-%d_%H%M%S")
+project_name = 'lt_daily'
+log_path = f'/home/pgregg/timelapse/logs/tl_{project_name}_{log_date}.log'
+logger = setup_logging(log_path)
 
 # define function for starting a task
 def start_task(task_func, task_name):
