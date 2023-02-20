@@ -24,7 +24,9 @@ def main():
     current_time = datetime.now()
     dir_name = current_time.strftime("%Y-%m-%d_%H%M%S")
 
-    photo_count = 60
+    run_hours = 7
+    #photo_count = run_hours * 1200 #1200 per hour
+    photo_count = 16400
     delay_sec = 3
     photo_path = f"/media/photos/2/{dir_name}"
 
