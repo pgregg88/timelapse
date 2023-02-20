@@ -69,7 +69,7 @@ def take_photos(num_photos, delay_sec, photo_path):
         remaining_photos = num_photos - (i + 1)
         remaining_time = timedelta(seconds=remaining_photos*delay_sec)
         completion_time = datetime.now() + remaining_time
-        if image_count % 100 == 0: # set to 500? for prod
+        if image_count % 1200 == 0: # 1200 = every hour
             logging.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 50 == 0: #set to 50 for prod.
             try:
