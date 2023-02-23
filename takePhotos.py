@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import csv
 #from main import log_path
 from logger import setup_logging
+from mqtt import publish_mqtt_status
 
 # Set up the logger with the log path
 # log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
@@ -45,6 +46,7 @@ def write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, hum
     with open(srt_path, 'a') as f_srt:
         f_srt.writelines(f"{srt_row_count}\r\n0{srt_start_time},000 --> 0{srt_end_time},000\r\n{srt_date}  temp:{temperature}F  pres:{pressure}inHg  hum:{humidity}%  wind:{wind_speed}mph {wind_dir}\r\n\r\n")
     logger.info(f'SRT file updated {srt_path}')
+    publish_mqtt_status(f'SRT file updated {srt_path}')
     
 def take_photos(num_photos, delay_sec, photo_path, logger):
     dateraw= datetime.now()
@@ -61,6 +63,7 @@ def take_photos(num_photos, delay_sec, photo_path, logger):
     end_time = start_time + timedelta(seconds=num_photos*delay_sec)
     image_count = 0
     logger.info(f"Photo taking started. Estimated end time: {end_time}")
+    publish_mqtt_status(f"Photo taking started. Estimated end time: {end_time}")
     for i in range(num_photos):
         srt_now = datetime.now()
         srt_date = srt_now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
@@ -72,7 +75,9 @@ def take_photos(num_photos, delay_sec, photo_path, logger):
         remaining_photos = num_photos - (i + 1)
         remaining_time = timedelta(seconds=remaining_photos*delay_sec)
         completion_time = datetime.now() + remaining_time
-        if image_count % 12 == 0: # 1200 = every hour
+        if image_count % 10 == 0:
+            publish_mqtt_status(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
+        if image_count % 1200 == 0: # 1200 = every hour
             logger.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 50 == 0: #set to 50 for prod.
             try:
@@ -110,4 +115,5 @@ def take_photos(num_photos, delay_sec, photo_path, logger):
     duration = end_time - start_time
     duration_str = str(timedelta(seconds=duration.total_seconds()))
     logger.info(f"Photo taking complete. Duration: {duration_str}")
+    publish_mqtt_status(f"Photo taking complete. Duration: {duration_str}")
     return photo_path, srt_path

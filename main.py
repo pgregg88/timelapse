@@ -6,7 +6,8 @@ from createVideo import create_video
 from pubVideo import publish_video
 from datetime import datetime
 from logger import setup_logging
-import paho.mqtt.client as mqtt
+from mqtt import publish_mqtt_status
+
 
 # Set up the logger with the log path
 now = datetime.now()
@@ -15,27 +16,6 @@ project_name = 'lt_daily'
 log_path = f'/home/pgregg/timelapse/logs/tl_{project_name}_{log_date}.log'
 logger = setup_logging(log_path)
 
-# Define the MQTT broker settings
-broker_address = "10.0.10.41"
-broker_port = 1883
-broker_username = "hass"
-broker_password = "monstermash1"
-# Define the MQTT topic for status updates
-status_topic = "timelapse/status"
-
-def publish_mqtt_status(status):
-    """Publish an MQTT message with the specified status."""
-    client = mqtt.Client()
-    client.username_pw_set(broker_username, broker_password)
-    client.connect(broker_address, broker_port)
-    try:
-        result = client.publish(status_topic, status)
-        if result.rc != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(f"Failed to publish MQTT message: {result.rc}")
-    except Exception as e:
-        logger.error(f"Error publishing MQTT message: {e}")
-    finally:
-        client.disconnect()
 
 # define function for starting a task
 def start_task(task_func, task_name):
@@ -58,6 +38,7 @@ def main():
     run_hours = 7
     #photo_count = run_hours * 1200 #1200 per hour
     photo_count = 16400
+    #photo_count = 130
     delay_sec = 3
     photo_path = f"/media/photos/2/{dir_name}"
 
@@ -71,7 +52,8 @@ def main():
         # wait for the take_pictures future to complete
         try:
             photo_path, srt_path = tp_future.result()
-            logger.debug(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
+            logger.info(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
+            publish_mqtt_status(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
         except Exception as e:
             logger.error(f'Error receiving result from take_photos: {e}')
             raise ValueError(f'Error receiving result from take_photos: {e}')
@@ -82,7 +64,8 @@ def main():
         # wait for the create_video future to complete
         try:
             video_path, json_path = cv_future.result()
-            logger.debug(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
+            logger.info(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
+            publish_mqtt_status(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
         except Exception as e:
             logger.error(f'Error receiving result from create_video: {e}')
             raise ValueError(f'Error receiving result from create_video: {e}')
@@ -93,6 +76,8 @@ def main():
         # wait for the publish_video future to complete
         try:
             pv_future.result()
+            logger.info(f'published_video to YouTube and archived.')
+            publish_mqtt_status(f'published_video to YouTube and archived.')
         except Exception as e:
             logger.error(f'Error in publish_video task: {e}')
             raise ValueError(f'Error in publish_video task: {e}')

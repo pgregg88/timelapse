@@ -6,6 +6,7 @@ import shutil
 import json
 # from main import log_path
 from logger import setup_logging
+from mqtt import publish_mqtt_status
 
 # Set up the logger with the log path
 # log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
@@ -54,19 +55,24 @@ def create_video(photo_path, srt_path, logger):
             json.dump( youTubeMetaData, outfile)
             logger.info('YouTube Metadata file created')
             logger.info(f'JSON file created: {json_path}')
+            publish_mqtt_status(f'JSON file created: {json_path}')
         
     except Exception as e:
-            logger.error('Error creating JSON', exc_info=e)   
+            logger.error('Error creating JSON', exc_info=e)
+            publish_mqtt_status('Error creating JSON', exc_info=e)
 
     # Create video
     logger.info('Starting video creation')
+    publish_mqtt_status('Starting video creation')
     try:
         cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -shortest -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75'" -y {video_path}'''
         logger.info(f'Executing command: {cmd}')
+        publish_mqtt_status(f'Executing command: {cmd}')
         os.system(cmd)
 
         if os.path.exists(video_path):
             logger.info(f'Video created successfully: {video_path}')
+            publish_mqtt_status(f'Video created successfully: {video_path}')
 
             #archive pictures
             try:
@@ -75,25 +81,32 @@ def create_video(photo_path, srt_path, logger):
                 if not isExist:
                     os.makedirs(archive_dir_path)
                     logger.info('Archive path directory created')
+                    publish_mqtt_status('Archive path directory created')
                 try:
                     archive_path = f'{archive_dir_path}/{current_date}.tar.gz'
                     os.system(f"tar --directory {photo_path} --create --verbose --file {archive_path} .")
                     logger.info(f'Image archive created: {archive_path}' )
+                    publish_mqtt_status(f'Image archive created: {archive_path}' )
                 except Exception as e:
                     logger.error('Error at %s', 'division', exc_info=e)
                 if os.path.exists(archive_path):
                     shutil.rmtree(photo_path)
                     logger.info(f'Local copy of photos deleted: {photo_path}' )
+                    publish_mqtt_status(f'Local copy of photos deleted: {photo_path}' )
                 else:
                     logger.error(f'Error: Could not delete local copy of photos: {photo_path}', exc_info=e)
+                    publish_mqtt_status(f'Error: Could not delete local copy of photos: {photo_path}', exc_info=e)
                     
             except Exception as e:
                 logger.error('Error creating photo archive', exc_info=e)
+                publish_mqtt_status('Error creating photo archive', exc_info=e)
             return video_path, json_path
         else:
             logger.error('Error creating video')
+            publish_mqtt_status('Error creating video')
             return None, None
         logger.info('Video complete.')
     except Exception as e:
         logger.error('Unknown error creating video', exc_info=e)
+        publish_mqtt_status('Unknown error creating video', exc_info=e)
         return None, None
