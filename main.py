@@ -6,6 +6,7 @@ from createVideo import create_video
 from pubVideo import publish_video
 from datetime import datetime
 from logger import setup_logging
+import paho.mqtt.client as mqtt
 
 # Set up the logger with the log path
 now = datetime.now()
@@ -14,14 +15,39 @@ project_name = 'lt_daily'
 log_path = f'/home/pgregg/timelapse/logs/tl_{project_name}_{log_date}.log'
 logger = setup_logging(log_path)
 
+# Define the MQTT broker settings
+broker_address = "10.0.10.41"
+broker_port = 1883
+broker_username = "hass"
+broker_password = "monstermash1"
+# Define the MQTT topic for status updates
+status_topic = "timelapse/status"
+
+def publish_mqtt_status(status):
+    """Publish an MQTT message with the specified status."""
+    client = mqtt.Client()
+    client.username_pw_set(broker_username, broker_password)
+    client.connect(broker_address, broker_port)
+    try:
+        result = client.publish(status_topic, status)
+        if result.rc != mqtt.MQTT_ERR_SUCCESS:
+            logger.error(f"Failed to publish MQTT message: {result.rc}")
+    except Exception as e:
+        logger.error(f"Error publishing MQTT message: {e}")
+    finally:
+        client.disconnect()
+
 # define function for starting a task
 def start_task(task_func, task_name):
     logger.info(f'Starting task {task_name}')
+    publish_mqtt_status(f'Task {task_name} started')
     try:
         task_func()
         logger.info(f'Finished task {task_name}')
+        publish_mqtt_status(f'Task {task_name} started')
     except Exception as e:
         logger.error(f'Error in task {task_name}: {e}')
+        publish_mqtt_status(f'Task {task_name} failed: {e}')
         raise ValueError(f'Error in task {task_name}: {e}')
 
 # define main function
