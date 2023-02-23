@@ -10,21 +10,6 @@ from mqtt import publish_mqtt_status
 
 now = datetime.now()
 
-
-
-# # define function for starting a task
-# def start_task(task_func, task_name):
-#     logger.info(f'Starting task {task_name}')
-#     publish_mqtt_status(f'Task {task_name} started')
-#     try:
-#         task_func()
-#         logger.info(f'Finished task {task_name}')
-#         publish_mqtt_status(f'Task {task_name} started')
-#     except Exception as e:
-#         logger.error(f'Error in task {task_name}: {e}')
-#         publish_mqtt_status(f'Task {task_name} failed: {e}')
-#         raise ValueError(f'Error in task {task_name}: {e}')
-
 # define main function
 def main():
     timestamp = now.strftime("%Y-%m-%d_%H%M%S")
@@ -40,10 +25,10 @@ def main():
     # playlistIds = 'PLFN-n1UuTGMFbSg3XSun34o3expxUWD-4' #daily timelapse
     tags = ["nightlapse","laketravis", "austin" ,"weather", "wx", "timelapse", "photography", "boating", "lake", "lakeway", "4K", "storms", "sunrise", "sunset", "heavyweather", "time-lapse", "clouds", "Meteorology", "wind", "sublimation", "deposition", "condensation", "saturation", "humidification", "60fps", "videoblog"]
     #photo_count = run_hours * 1200 #1200 per hour
-    #photo_count = 3600
-    photo_count = 130
+    photo_count = 3600
+    #photo_count = 130
     fps = 60
-    delay_sec = 1
+    delay_sec = 3
     photo_path = f"/media/photos/2/{instance_name}"
 
     if not os.path.exists(photo_path):
