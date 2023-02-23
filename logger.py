@@ -1,25 +1,23 @@
 import logging
 
-def setup_logging(log_path):
-    # Create a logger
-    logger = logging.getLogger(__name__)
+def setup_logging(log_path, instance_name):
+    logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    # Create a file handler and set its log level to INFO
-    fh = logging.FileHandler(log_path)
-    fh.setLevel(logging.INFO)
-    
-    # Create a stream handler and set its log level to INFO
-    sh = logging.StreamHandler()
-    sh.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
-    # Create a formatter and add it to the handler
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-    fh.setFormatter(formatter)
-    sh.setFormatter(formatter)
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
 
-    # Add the handlers to the logger
-    logger.addHandler(fh)
-    logger.addHandler(sh)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    # Add instance_name to log
+    logger.info(f'Logging for project {instance_name}')
 
     return logger

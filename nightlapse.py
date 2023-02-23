@@ -8,46 +8,54 @@ from datetime import datetime
 from logger import setup_logging
 from mqtt import publish_mqtt_status
 
-
-# Set up the logger with the log path
 now = datetime.now()
-log_date = now.strftime("%Y-%m-%d_%H%M%S")
-project_name = 'lt_daily'
-log_path = f'/home/pgregg/timelapse/logs/tl_{project_name}_{log_date}.log'
-logger = setup_logging(log_path)
 
 
-# define function for starting a task
-def start_task(task_func, task_name):
-    logger.info(f'Starting task {task_name}')
-    publish_mqtt_status(f'Task {task_name} started')
-    try:
-        task_func()
-        logger.info(f'Finished task {task_name}')
-        publish_mqtt_status(f'Task {task_name} started')
-    except Exception as e:
-        logger.error(f'Error in task {task_name}: {e}')
-        publish_mqtt_status(f'Task {task_name} failed: {e}')
-        raise ValueError(f'Error in task {task_name}: {e}')
+
+# # define function for starting a task
+# def start_task(task_func, task_name):
+#     logger.info(f'Starting task {task_name}')
+#     publish_mqtt_status(f'Task {task_name} started')
+#     try:
+#         task_func()
+#         logger.info(f'Finished task {task_name}')
+#         publish_mqtt_status(f'Task {task_name} started')
+#     except Exception as e:
+#         logger.error(f'Error in task {task_name}: {e}')
+#         publish_mqtt_status(f'Task {task_name} failed: {e}')
+#         raise ValueError(f'Error in task {task_name}: {e}')
 
 # define main function
 def main():
-    current_time = datetime.now()
-    dir_name = current_time.strftime("%Y-%m-%d_%H%M%S")
-
-    run_hours = 7
+    timestamp = now.strftime("%Y-%m-%d_%H%M%S")
+    titledate = now.strftime("%m/%d/%Y")
+    project_name = 'lt_nightlapse'
+    instance_name = f'{project_name}_{timestamp}'
+    title = f'{titledate}: Nightlapse: Lake Travis, Texas (Austin, TX): 4K, 60fps Daily Timelapse Video'
+    #title = f'{titledate}: Timelapse Lake Travis, Texas (Austin, TX): 4K, 60fps Daily Weather & Boat Traffic Timelapse Video''
+    #description  = '4K, 60fps Daily Weather & Boat Traffic Timelapse Video taken near Lakeway, Texas (Austin, Texas)\n \n Lake Travis is a large recreational lake and the crown jewel of the Central Texas Highland Lakes chain. It sits just west of Austin, TX in the Texas Hill Country and is the most visited freshwater recreational vacation destination in the state. The Lake Travis limestone bottom results in its unique crystal-clear blue waters, making it a freshwater haven for water enthusiasts of all kinds. \n \nThe lake is 63.75 miles long, has over 271 miles of shoreline and its maximum width is 4.5 miles. The lake covers 18,929 acres. \n \nMusic by Bensound.com\n \nAbout this channel:\nWe publish a daily 4K timelapse movie illustrating the weather around Lake Travis, Texas. The images are taken near Lakeway, Texas. \n \nIn addition to being visually interesting, we create these videos as a resource archive anyone can use to study local environmental changes over time.'
+    description  = '4K, 60fps Daily Nightlapse Video taken near Lakeway, Texas (Austin, Texas)\n \n Lake Travis is a large recreational lake and the crown jewel of the Central Texas Highland Lakes chain. It sits just west of Austin, TX in the Texas Hill Country and is the most visited freshwater recreational vacation destination in the state. The Lake Travis limestone bottom results in its unique crystal-clear blue waters, making it a freshwater haven for water enthusiasts of all kinds. \n \nThe lake is 63.75 miles long, has over 271 miles of shoreline and its maximum width is 4.5 miles. The lake covers 18,929 acres. \n \nMusic by Bensound.com\n \nAbout this channel:\nWe publish a daily 4K timelapse movie illustrating the weather around Lake Travis, Texas. The images are taken near Lakeway, Texas. \n \nIn addition to being visually interesting, we create these videos as a resource archive anyone can use to study local environmental changes over time.'
+    categoryId = '28'
+    playlistIds = 'PLFN-n1UuTGMHuazhQbJr9okQE-RZk2uhq' #nightlapse
+    # playlistIds = 'PLFN-n1UuTGMFbSg3XSun34o3expxUWD-4' #daily timelapse
+    tags = ["nightlapse","laketravis", "austin" ,"weather", "wx", "timelapse", "photography", "boating", "lake", "lakeway", "4K", "storms", "sunrise", "sunset", "heavyweather", "time-lapse", "clouds", "Meteorology", "wind", "sublimation", "deposition", "condensation", "saturation", "humidification", "60fps", "videoblog"]
     #photo_count = run_hours * 1200 #1200 per hour
-    photo_count = 3600
-    #photo_count = 130
-    delay_sec = 3
-    photo_path = f"/media/photos/2/{dir_name}"
+    #photo_count = 3600
+    photo_count = 130
+    fps = 60
+    delay_sec = 1
+    photo_path = f"/media/photos/2/{instance_name}"
 
     if not os.path.exists(photo_path):
         os.makedirs(photo_path)
+        
+    # Set up the logger with the log path
+    log_path = f'/home/pgregg/timelapse/logs/tl_{instance_name}.log'
+    logger = setup_logging(log_path, instance_name)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # submit take_pictures task to the thread pool and get its future object
-        tp_future = executor.submit(take_photos, photo_count, delay_sec, photo_path, logger)
+        tp_future = executor.submit(take_photos, photo_count, delay_sec, photo_path, logger, timestamp, now, instance_name)
 
         # wait for the take_pictures future to complete
         try:
@@ -59,7 +67,7 @@ def main():
             raise ValueError(f'Error receiving result from take_photos: {e}')
 
         # submit create_video task to the thread pool and get its future object
-        cv_future = executor.submit(create_video, photo_path, srt_path, logger)
+        cv_future = executor.submit(create_video, photo_path, srt_path, logger, timestamp, now, instance_name, fps, title, description, categoryId, playlistIds, tags)
 
         # wait for the create_video future to complete
         try:

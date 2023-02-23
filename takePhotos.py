@@ -14,6 +14,8 @@ from mqtt import publish_mqtt_status
 
 csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'
+if not os.path.exists(csv_save_path):
+    os.makedirs(csv_save_path)
 
 # retry decorator with maximum number of retries
 def retry_on_exception(max_retries):
@@ -48,25 +50,22 @@ def write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, hum
     logger.info(f'SRT file updated {srt_path}')
     publish_mqtt_status(f'SRT file updated {srt_path}')
     
-def take_photos(num_photos, delay_sec, photo_path, logger):
-    dateraw= datetime.now()
-    timestamp = dateraw.strftime("%Y-%m-%d_%H%M%S")
+def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, instance_name):
     # srt_path = '/media/videos/srt/02162023_b.srt'
     srt_row_count = 1
-    srt_path = f'/media/videos/srt/{timestamp}_v2.srt'
+    srt_path = f'/media/videos/srt/{instance_name}_v2.srt'
     srt_elapsed_seconds = 0
     logger.info(f'srt save path: {srt_path}')
     url = "http://10.0.30.100/cgi-bin/api.cgi?cmd=Snap&channel=md=Snap&channel=0&rs=123&user=admin&password=pg12345678"
     if not os.path.exists(photo_path):
         os.makedirs(photo_path)
-    start_time = datetime.now()
+    start_time = now
     end_time = start_time + timedelta(seconds=num_photos*delay_sec)
     image_count = 0
     logger.info(f"Photo taking started. Estimated end time: {end_time}")
     publish_mqtt_status(f"Photo taking started. Estimated end time: {end_time}")
     for i in range(num_photos):
-        srt_now = datetime.now()
-        srt_date = srt_now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
+        srt_date = now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
         try:
             take_photo(url, photo_path, logger)
         except Exception as e:
