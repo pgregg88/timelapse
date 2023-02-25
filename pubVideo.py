@@ -14,7 +14,7 @@ def publish_video(video_path, json_path, logger):
     logger.info('Publishing Video')
     publish_mqtt_status('Publishing Video')
     try:
-        result = subprocess.run(['/home/pgregg/timelapse/youtubeuploader', '-filename', video_path, '-metaJSON', json_path], capture_output=True)
+        result = subprocess.run(['/home/pgregg/timelapse/youtubeuploader', '-filename', video_path, '-metaJSON', json_path, '-cache', '/home/pgregg/timelapse/request.token', '-secrets', '/home/pgregg/timelapse/client_secrets.json'], capture_output=True)
 
         if result.returncode == 0:
             logger.info("Publishing: %s", result.stdout.decode())
