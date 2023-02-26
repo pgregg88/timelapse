@@ -65,7 +65,8 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
     logger.info(f"Photo taking started. Estimated end time: {end_time}")
     publish_mqtt_status(f"Photo taking started. Estimated end time: {end_time}")
     for i in range(num_photos):
-        srt_date = now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
+        srt_now = datetime.now()
+        srt_date = srt_now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
         try:
             take_photo(url, photo_path, logger)
         except Exception as e:
