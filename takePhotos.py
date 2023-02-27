@@ -12,7 +12,8 @@ from mqtt import publish_mqtt_status
 # log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
 # logger = setup_logging(log_path)
 
-csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
+# csv_copy_path = 'root@ha.local:/config/laketraviswx.csv'
+csv_copy_path = '/opt/homeassistant/config/laketraviswx.csv'
 csv_save_path = '/media/videos/'
 if not os.path.exists(csv_save_path):
     os.makedirs(csv_save_path)
