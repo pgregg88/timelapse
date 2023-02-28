@@ -46,9 +46,10 @@ def main():
         try:
             photo_path, srt_path = tp_future.result()
             logger.info(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
-            publish_mqtt_status(f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
+            publish_mqtt_status("timelapse/status",f'take_photos: Received photo_path: {photo_path}, srt_path: {srt_path}')
         except Exception as e:
             logger.error(f'Error receiving result from take_photos: {e}')
+            publish_mqtt_status("timelapse/error",f'Error receiving result from take_photos: {e}')
             raise ValueError(f'Error receiving result from take_photos: {e}')
 
         # submit create_video task to the thread pool and get its future object
@@ -58,9 +59,10 @@ def main():
         try:
             video_path, json_path = cv_future.result()
             logger.info(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
-            publish_mqtt_status(f'create_video: Received video_path: {video_path}, json_path: {json_path}')
+            publish_mqtt_status("timelapse/status",f'create_video: Received video_path: {video_path}, json_path: {json_path}')
         except Exception as e:
             logger.error(f'Error receiving result from create_video: {e}')
+            publish_mqtt_status("timelapse/error",f'Error receiving result from create_video: {e}')
             raise ValueError(f'Error receiving result from create_video: {e}')
 
         # submit publish_video task to the thread pool
@@ -70,9 +72,10 @@ def main():
         try:
             pv_future.result()
             logger.info(f'published_video to YouTube and archived.')
-            publish_mqtt_status(f'published_video to YouTube and archived.')
+            publish_mqtt_status("timelapse/status",f'published_video to YouTube and archived.')
         except Exception as e:
             logger.error(f'Error in publish_video task: {e}')
+            publish_mqtt_status("timelapse/error",f'Error in publish_video task: {e}')
             raise ValueError(f'Error in publish_video task: {e}')
     # shutdown the executor after all tasks have completed
     executor.shutdown()

@@ -49,7 +49,7 @@ def write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, hum
     with open(srt_path, 'a') as f_srt:
         f_srt.writelines(f"{srt_row_count}\r\n0{srt_start_time},000 --> 0{srt_end_time},000\r\n{srt_date}  temp:{temperature}F  pres:{pressure}inHg  hum:{humidity}%  wind:{wind_speed}mph {wind_dir}\r\n\r\n")
     logger.info(f'SRT file updated {srt_path}')
-    publish_mqtt_status(f'SRT file updated {srt_path}')
+    publish_mqtt_status("timelapse/status",f'SRT file updated {srt_path}')
     
 def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, instance_name):
     # srt_path = '/media/videos/srt/02162023_b.srt'
@@ -64,7 +64,7 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
     end_time = start_time + timedelta(seconds=num_photos*delay_sec)
     image_count = 0
     logger.info(f"Photo taking started. Estimated end time: {end_time}")
-    publish_mqtt_status(f"Photo taking started. Estimated end time: {end_time}")
+    publish_mqtt_status("timelapse/status",f"Photo taking started. Estimated end time: {end_time}")
     for i in range(num_photos):
         srt_now = datetime.now()
         srt_date = srt_now.strftime("%a, %b %d, %Y  %-l:%M %p: ")
@@ -72,12 +72,13 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
             take_photo(url, photo_path, logger)
         except Exception as e:
             logger.error(str(e))
+            publish_mqtt_status("timelapse/error",str(e))
         image_count += 1
         remaining_photos = num_photos - (i + 1)
         remaining_time = timedelta(seconds=remaining_photos*delay_sec)
         completion_time = datetime.now() + remaining_time
         if image_count % 10 == 0:
-            publish_mqtt_status(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
+            publish_mqtt_status("timelapse/status",f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 1200 == 0: # 1200 = every hour
             logger.info(f"Photos taken: {i+1}, Remaining: {remaining_photos}, Estimated completion time: {completion_time}")
         if image_count % 50 == 0: #set to 50 for prod.
@@ -87,6 +88,7 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
                 logger.info(f'WX CSV copied from {csv_copy_path}')
             except Exception as e:
                 logger.error(str(e))
+                publish_mqtt_status("timelapse/error",str(e))
         if image_count % 55 == 0: # set to 55 for prod if 60 fps per second
             #get latest wx
             line_num = -1
@@ -116,5 +118,5 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
     duration = end_time - start_time
     duration_str = str(timedelta(seconds=duration.total_seconds()))
     logger.info(f"Photo taking complete. Duration: {duration_str}")
-    publish_mqtt_status(f"Photo taking complete. Duration: {duration_str}")
+    publish_mqtt_status("timelapse/status",f"Photo taking complete. Duration: {duration_str}")
     return photo_path, srt_path
