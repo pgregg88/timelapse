@@ -12,7 +12,7 @@ from mqtt import publish_mqtt_status
 # log_path = '/home/pgregg/timelapse/logs/shouldnotbehere.log'
 # logger = setup_logging(log_path)
 
-def create_video(photo_path, srt_path, logger, timestamp, now, instance_name, fps, title, description, categoryId, playlistIds, tags):
+def create_video(photo_path, srt_path, logger, timestamp, now, instance_name, fps, title, description, categoryId, playlistIds, tags, video_start_fade_time):
     audio_track_list = ['tomorrow-llthat.m4a', 'brazilsamb-funkyelement.m4a', 'brazilsamb-happyrock.m4a',  'creativeminds-straight.m4a', 'dance-hipjazz.m4a', 'dance-littleplanet.m4a', 'deepblue-hipjazz.m4a', 'deepblue-sweet.m4a', 'downtown-dreams.m4a', 'downtown-hipjazz.m4a', 'dreams-happyrock.m4a', 'dreams-onceagain.m4a', 'elevate-hipjazz.m4a', 'elevate-newdawn.m4a', 'emories-brazilsamb.m4a', 'emories-house.m4a', 'funkyelement-creativeminds.m4a', 'funkyelement-groovyhiphop.m4a', 'groovyhiphop-dance.m4a', 'groovyhiphop-downtown.m4a', 'happyrock-downtown.m4a', 'happyrock-groovyhiphop.m4a', 'hipjazz-happyrock.m4a', 'hipjazz-photoalbu.m4a', 'house-happyrock.m4a', 'house-hipjazz.m4a', 'house-inspire.m4a', 'house-littleplanet.m4a', 'house-pianomoment.m4a', 'inspire-groovyhiphop.m4a', 'inspire-hipjazz.m4a', 'littleplanet-deepblue.m4a', 'littleplanet-hipjazz.m4a', 'littleplanet-photoalbu.m4a', 'llthat-emories.m4a', 'llthat-house.m4a', 'newdawn-dance.m4a', 'newdawn-house.m4a', 'onceagain-dance.m4a', 'onceagain-newdawn.m4a', 'photoalbu-dance.m4a', 'photoalbu-groovyhiphop.m4a', 'pianomoment-dance.m4a',  'psychedelic-downtown.m4a', 'psychedelic-tomorrow.m4a', 'straight-groovyhiphop.m4a', 'straight-happyrock.m4a', 'summer-funkyelement.m4a', 'summer-sweet.m4a', 'sweet-onceagain.m4a', 'sweet-sweet.m4a', 'tomorrow-downtown.m4a']
     audio_file_name = random.choice(audio_track_list)
     video_name = f"{instance_name}.mp4"
@@ -61,7 +61,8 @@ def create_video(photo_path, srt_path, logger, timestamp, now, instance_name, fp
     logger.info('Starting video creation')
     publish_mqtt_status("timelapse/status",'Starting video creation')
     try:
-        cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -shortest -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75'" -y {video_path}'''
+        #no fade # cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -shortest -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75'" -y {video_path}'''
+        cmd = f'''ffmpeg -framerate {fps} -pattern_type glob -i "{photo_path}/*.jpg" -i /media/videos/tl_music/m4a_long/{audio_file_name} -s:v 3840x2160 -c:v libx264 -bf 2 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart -vf "subtitles={srt_path}:force_style='PrimaryColour=&H999999,Fontsize=6,Fontname=Consolas,BackColour=&H80000000,Spacing=0.2,Outline=0,Shadow=0.75',fade=t=out:st={video_start_fade_time}:d=5" -af "afade=t=out:st={video_start_fade_time}:d=5" -shortest -y {video_path}'''
         logger.info(f'Executing command: {cmd}')
         publish_mqtt_status("timelapse/status",f'Executing command: {cmd}')
         os.system(cmd)
