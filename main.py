@@ -27,7 +27,7 @@ def main():
     fps = 60
     delay_sec = 3
     photo_path = f"/media/photos/2/{instance_name}"
-    video_start_fade_time = (photo_count/fps)-5
+    video_start_fade_time = round((photo_count/fps)-5, 1)
 
     if not os.path.exists(photo_path):
         os.makedirs(photo_path)
