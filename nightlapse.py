@@ -30,6 +30,7 @@ def main():
     fps = 60
     delay_sec = 3
     photo_path = f"/media/photos/2/{instance_name}"
+    video_start_fade_time = round((photo_count/fps)-5, 1)
 
     if not os.path.exists(photo_path):
         os.makedirs(photo_path)
@@ -53,7 +54,7 @@ def main():
             raise ValueError(f'Error receiving result from take_photos: {e}')
 
         # submit create_video task to the thread pool and get its future object
-        cv_future = executor.submit(create_video, photo_path, srt_path, logger, timestamp, now, instance_name, fps, title, description, categoryId, playlistIds, tags)
+        cv_future = executor.submit(create_video, photo_path, srt_path, logger, timestamp, now, instance_name, fps, title, description, categoryId, playlistIds, tags, video_start_fade_time)
 
         # wait for the create_video future to complete
         try:
