@@ -107,8 +107,18 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
             srt_start_time = timedelta(seconds=srt_elapsed_seconds)
             srt_end_calc = srt_elapsed_seconds + 1
             srt_end_time = timedelta(seconds=srt_end_calc)
+            wind_direction = wind_dir  # replace this with your variable
+            if len(wind_direction) == 1:
+                wind_direction = "  " + direction
+            elif len(wind_direction) == 2:
+                direction = " " + direction
+            elif len(wind_direction) != 3:
+                raise ValueError("Direction should be 1, 2, or 3 characters long")
+            logger.info(f"Error converting wind direction: {ValueError}")
+            publish_mqtt_status("timelapse/errors",f"Error converting wind direction: {ValueError}")
+
             
-            write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_dir, visability, daily_rain, srt_date, srt_row_count, logger)
+            write_srt(srt_path, srt_start_time, srt_end_time, temperature, pressure, humidity, wind_speed, wind_direction, visability, daily_rain, srt_date, srt_row_count, logger)
             srt_elapsed_seconds += 1
             srt_row_count += 1
             
