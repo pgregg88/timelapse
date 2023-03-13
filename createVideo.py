@@ -81,7 +81,7 @@ def create_video(photo_path, srt_path, logger, timestamp, now, instance_name, fp
                     publish_mqtt_status("timelapse/status",'Archive path directory created')
                 try:
                     archive_path = f'{archive_dir_path}/{instance_name}.tar.gz'
-                    os.system(f"tar --directory {photo_path} --create --verbose --file {archive_path} .")
+                    os.system(f"tar --directory {photo_path} --create --gzip --file {archive_path} .")
                     logger.info(f'Image archive created: {archive_path}' )
                     publish_mqtt_status("timelapse/status",f'Image archive created: {archive_path}' )
                 except Exception as e:
