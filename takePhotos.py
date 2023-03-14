@@ -89,7 +89,7 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
             except Exception as e:
                 logger.error(str(e))
                 publish_mqtt_status("timelapse/error",str(e))
-        if image_count % 55 == 0: # set to 55 for prod if 60 fps per second
+        if image_count % 55 == 0: # set to 55 for prod if 60 fps per secondll
             #get latest wx
             line_num = -1
             with open('/media/videos/laketraviswx.csv', "r", encoding="utf-8", errors="ignore") as csv_file:
@@ -108,12 +108,18 @@ def take_photos(num_photos, delay_sec, photo_path, logger, timestamp, now, insta
             srt_end_calc = srt_elapsed_seconds + 1
             srt_end_time = timedelta(seconds=srt_end_calc)
             wind_direction = wind_dir  # replace this with your variable
-            if len(wind_direction) == 1:
-                wind_direction = "  " + direction
-            elif len(wind_direction) == 2:
-                direction = " " + direction
-            elif len(wind_direction) != 3:
-                raise ValueError("Direction should be 1, 2, or 3 characters long")
+            if len(wind_dir) == 1:
+              wind_direction = "   " + wind_dir
+            elif len(wind_dir) == 2:
+              wind_direction = "  " + wind_dir
+            elif len(wind_dir) == 3:
+              wind_direction = "  " + wind_dir
+            elif len(wind_dir) == 4:
+              wind_direction = wind_dir
+            else:
+              raise ValueError("Direction should be 1, 2, or 3 characters long")
+
+            
             logger.info(f"Error converting wind direction: {ValueError}")
             publish_mqtt_status("timelapse/errors",f"Error converting wind direction: {ValueError}")
 
